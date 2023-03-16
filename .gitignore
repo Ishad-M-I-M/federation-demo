@@ -51,3 +51,6 @@ typings/
 
 # environment variables
 .env
+
+# Ballerina build directory
+target/

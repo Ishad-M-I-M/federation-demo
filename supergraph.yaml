@@ -1,0 +1,18 @@
+federation_version: 2
+subgraphs:
+  accounts:
+    routing_url: http://localhost:4001
+    schema:
+      file: ./subgraphs/accounts.graphql
+  reviews:
+    routing_url: http://localhost:4002
+    schema:
+      file: ./subgraphs/reviews.graphql
+  products:
+    routing_url: http://localhost:4003
+    schema:
+      file: ./subgraphs/products.graphql
+  inventory:
+    routing_url: http://localhost:4004
+    schema:
+      file: ./subgraphs/inventory.graphql
