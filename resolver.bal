@@ -1,3 +1,4 @@
+import ballerina/io;
 import ballerina/graphql;
 
 public class Resolver {
@@ -31,6 +32,9 @@ public class Resolver {
 
     isolated function resolve() returns error? {
         // Resolve the fields which are not resolved yet.
+
+        io:println("*********************");
+
         while self.toBeResolved.length() > 0 {
             unResolvableField 'record = self.toBeResolved.shift();
 
@@ -47,15 +51,19 @@ public class Resolver {
 
                 path = path.slice(0, path.length() - 1);
 
-                string[] ids = check self.getIdsInPath(self.result, path, self.resultType);
+                string[]? requiredFields = queryPlan.get('record.parent).fields.get('record.'field.getName()).requires;
 
-                string key = queryPlan.get('record.parent).key;
+                map<json>[] requiredFieldWithValues = check self.getRequiredFieldsInPath(self.result, self.resultType, path, requiredFields);
 
                 if 'record.'field.getUnwrappedType().kind == "SCALAR" {
                     // If the field type is a scalar type, just pass the field name wrapped with entity representation.
-                    string queryString = wrapWithEntityRepresentation('record.parent, key, ids, 'record.'field.getName());
+                    string queryString = wrapWithEntityRepresentation('record.parent, requiredFieldWithValues, 'record.'field.getName());
+
+                    io:println("[SCALAR]", queryString);
 
                     EntityResponse result = check 'client->execute(queryString);
+
+                    io:println(result.data._entities);
 
                     check self.compose(self.result, result.data._entities, self.getEffectivePath('record.'field));
                 }
@@ -65,9 +73,13 @@ public class Resolver {
 
                     string fieldString = classifier.getFieldStringWithRoot();
 
-                    string queryString = wrapWithEntityRepresentation('record.parent, key, ids, fieldString);
+                    string queryString = wrapWithEntityRepresentation('record.parent, requiredFieldWithValues, fieldString);
+
+                    io:println("[NON-SCALAR]", queryString);
 
                     EntityResponse response = check 'client->execute(queryString);
+
+                    io:println(response.data._entities);
 
                     check self.compose(self.result, response.data._entities, self.getEffectivePath('record.'field));
 
@@ -176,38 +188,50 @@ public class Resolver {
         }
     }
 
-    // Get the ids of the entities in the path from the current result.
-    // The path should contain upto a '@' element if it is an array. ( should not include @ in the path).
-    isolated function getIdsInPath(json pointer, string[] path, string parentType) returns string[]|error {
+    private isolated function getEffectivePath(graphql:Field 'field) returns string[] {
+        return convertPathToStringArray('field.getPath().slice(self.currentPath.length()));
+    }
 
+    // Get the values of required fields from the results.
+    // Don't support @ in the path.
+    isolated function getRequiredFieldsInPath(json pointer, string pointerType, string[] path, string[]? requiredFields = ()) returns map<json>[]|error {
         if path.length() == 0 {
-            string key = queryPlan.get(parentType).key;
-            string[] ids = [];
+            string key = queryPlan.get(pointerType).key;
+            string[] requiredFieldMapKeys = [key];
+
+            if requiredFields is string[] {
+                requiredFieldMapKeys.push(...requiredFields);
+            }
+
+            map<json>[] fields = [];
             if pointer is json[] {
                 foreach var element in pointer {
-                    ids.push((<map<json>>element)[key].toString());
+                    map<json> fieldValues = {};
+                    foreach var requiredField in requiredFieldMapKeys {
+                        fieldValues[requiredField] = (<map<json>>element)[requiredField];
+                    }
+                    fields.push(fieldValues);
                 }
             }
             else if pointer is map<json> {
-                ids.push(pointer[key].toString());
+                map<json> fieldValues = {};
+                foreach var requiredField in requiredFieldMapKeys {
+                    fieldValues[requiredField] = (<map<json>>pointer)[requiredField];
+                }
+                fields.push(fieldValues);
             }
             else {
                 return error("Error: Cannot get ids from the result.");
             }
 
-            return ids;
+            return fields;
         }
 
         string element = path.shift();
         json newPointer = (<map<json>>pointer)[element];
-        string fieldType = queryPlan.get(parentType).fields.get(element).'type;
+        string fieldType = queryPlan.get(pointerType).fields.get(element).'type;
 
-        return self.getIdsInPath(newPointer, path, fieldType);
-
-    }
-
-    private isolated function getEffectivePath(graphql:Field 'field) returns string[] {
-        return convertPathToStringArray('field.getPath().slice(self.currentPath.length()));
+        return self.getRequiredFieldsInPath(newPointer, fieldType, path, requiredFields);
     }
 
 }

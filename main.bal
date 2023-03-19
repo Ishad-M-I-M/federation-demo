@@ -17,16 +17,16 @@ service on new graphql:Listener(9000) {
 
     function init() returns error? {
         self.clients = {
-            "accounts": check new graphql:Client("http://localhost:4001"),
-            "reviews": check new graphql:Client("http://localhost:4002"),
-            "products": check new graphql:Client("http://localhost:4003"),
-            "inventory": check new graphql:Client("http://localhost:4004")
+            ACCOUNTS: check new graphql:Client("http://localhost:4001"),
+            REVIEWS: check new graphql:Client("http://localhost:4002"),
+            PRODUCTS: check new graphql:Client("http://localhost:4003"),
+            INVENTORY: check new graphql:Client("http://localhost:4004")
         };
     }
 
     isolated resource function get me(graphql:Field 'field) returns User|error {
-        graphql:Client 'client = self.clients.get("accounts");
-        QueryFieldClassifier classifier = new ('field, "accounts");
+        graphql:Client 'client = self.clients.get(ACCOUNTS);
+        QueryFieldClassifier classifier = new ('field, ACCOUNTS);
 
         string fieldString = classifier.getFieldString();
         unResolvableField[] propertiesNotResolved = classifier.getUnresolvableFields();
@@ -42,8 +42,8 @@ service on new graphql:Listener(9000) {
     }
 
     isolated resource function get topProducts(graphql:Field 'field, int first = 5) returns Product[]|error {
-        graphql:Client 'client = self.clients.get("products");
-        QueryFieldClassifier classifier = new ('field, "products");
+        graphql:Client 'client = self.clients.get(PRODUCTS);
+        QueryFieldClassifier classifier = new ('field, PRODUCTS);
 
         string fieldString = classifier.getFieldString();
         unResolvableField[] propertiesNotResolved = classifier.getUnresolvableFields();
