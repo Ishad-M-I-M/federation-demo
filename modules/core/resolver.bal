@@ -1,22 +1,22 @@
-import ballerina/io;
 import ballerina/graphql;
 
 public class Resolver {
 
     // map of clients objects.
     private map<graphql:Client> clients;
-
     private unResolvableField[] toBeResolved;
 
     // The final result of the resolver. Created an composed while resolving by `resolve()`.
     private json result;
-
     private string resultType;
-
     private string[] currentPath;
 
-    public isolated function init(map<graphql:Client> clients, json result, string resultType, unResolvableField[] unResolvableFields, string[] currentPath) {
+    // Query plan used to classify the fields.
+    private final readonly & table<queryPlanEntry> key(typename) queryPlan;
+
+    public isolated function init(map<graphql:Client> clients, readonly & table<queryPlanEntry> key(typename) queryPlan, json result, string resultType, unResolvableField[] unResolvableFields, string[] currentPath) {
         self.clients = clients;
+        self.queryPlan = queryPlan;
         self.result = result;
         self.resultType = resultType;
         self.toBeResolved = unResolvableFields;
@@ -32,9 +32,6 @@ public class Resolver {
 
     isolated function resolve() returns error? {
         // Resolve the fields which are not resolved yet.
-
-        io:println("*********************");
-
         while self.toBeResolved.length() > 0 {
             unResolvableField 'record = self.toBeResolved.shift();
 
@@ -42,7 +39,7 @@ public class Resolver {
             // These can be resolved and composed directly to the result.
             if 'record.'field.getPath().slice(self.currentPath.length()).filter(e => e == "@").length() < 1 {
 
-                string clientName = queryPlan.get('record.parent).fields.get('record.'field.getName()).'client;
+                string clientName = self.queryPlan.get('record.parent).fields.get('record.'field.getName()).'client;
 
                 graphql:Client 'client = self.clients.get(clientName);
 
@@ -51,7 +48,7 @@ public class Resolver {
 
                 path = path.slice(0, path.length() - 1);
 
-                string[]? requiredFields = queryPlan.get('record.parent).fields.get('record.'field.getName()).requires;
+                string[]? requiredFields = self.queryPlan.get('record.parent).fields.get('record.'field.getName()).requires;
 
                 map<json>[] requiredFieldWithValues = check self.getRequiredFieldsInPath(self.result, self.resultType, clientName, path, requiredFields);
 
@@ -59,34 +56,26 @@ public class Resolver {
                     // If the field type is a scalar type, just pass the field name wrapped with entity representation.
                     string queryString = wrapWithEntityRepresentation('record.parent, requiredFieldWithValues, 'record.'field.getName());
 
-                    io:println("[SCALAR]", queryString);
-
                     EntityResponse result = check 'client->execute(queryString);
-
-                    io:println(result.data._entities);
 
                     check self.compose(self.result, result.data._entities, self.getEffectivePath('record.'field));
                 }
                 else {
                     // Else need to classify the fields and resolve them accordingly.
-                    QueryFieldClassifier classifier = new ('record.'field, clientName);
+                    QueryFieldClassifier classifier = new ('record.'field, self.queryPlan, clientName);
 
                     string fieldString = classifier.getFieldStringWithRoot();
 
                     string queryString = wrapWithEntityRepresentation('record.parent, requiredFieldWithValues, fieldString);
 
-                    io:println("[NON-SCALAR]", queryString);
-
                     EntityResponse response = check 'client->execute(queryString);
-
-                    io:println(response.data._entities);
 
                     check self.compose(self.result, response.data._entities, self.getEffectivePath('record.'field));
 
                     unResolvableField[] propertiesNotResolved = classifier.getUnresolvableFields();
 
                     if (propertiesNotResolved.length() > 0) {
-                        Resolver resolver = new (self.clients, self.result, self.resultType, propertiesNotResolved, self.currentPath);
+                        Resolver resolver = new (self.clients, self.queryPlan, self.result, self.resultType, propertiesNotResolved, self.currentPath);
                         check resolver.resolve();
                     }
 
@@ -109,7 +98,7 @@ public class Resolver {
                 // update the pointer and related information till it finds a @ element.
                 while element != "@" {
                     pointer = (<map<json>>pointer).get(element);
-                    pointerType = queryPlan.get(pointerType).fields.get(element).'type;
+                    pointerType = self.queryPlan.get(pointerType).fields.get(element).'type;
                     element = path.shift();
                     currentPath.push(element);
                 }
@@ -117,7 +106,7 @@ public class Resolver {
                 // Iterate over the list in current pointer and compose the results into the inner fields.
                 if pointer is json[] {
                     foreach var i in 0 ..< pointer.length() {
-                        Resolver resolver = new (self.clients, pointer[i], pointerType, ['record], currentPath);
+                        Resolver resolver = new (self.clients, self.queryPlan, pointer[i], pointerType, ['record], currentPath);
                         check resolver.resolve();
                     }
                 }
@@ -196,7 +185,7 @@ public class Resolver {
     // Don't support @ in the path.
     isolated function getRequiredFieldsInPath(json pointer, string pointerType, string clientName, string[] path, string[]? requiredFields = ()) returns map<json>[]|error {
         if path.length() == 0 {
-            string key = queryPlan.get(pointerType).keys.get(clientName);
+            string key = self.queryPlan.get(pointerType).keys.get(clientName);
             string[] requiredFieldMapKeys = [key];
 
             if requiredFields is string[] {
@@ -229,7 +218,7 @@ public class Resolver {
 
         string element = path.shift();
         json newPointer = (<map<json>>pointer)[element];
-        string fieldType = queryPlan.get(pointerType).fields.get(element).'type;
+        string fieldType = self.queryPlan.get(pointerType).fields.get(element).'type;
 
         return self.getRequiredFieldsInPath(newPointer, fieldType, clientName, path, requiredFields);
     }

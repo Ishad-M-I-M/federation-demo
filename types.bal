@@ -36,7 +36,3 @@ type MeResponse record {
 type topProductsResponse record {
     record {|Product[] topProducts;|} data;
 };
-
-type EntityResponse record {
-    record {|json[] _entities;|} data;
-};

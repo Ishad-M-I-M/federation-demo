@@ -23,7 +23,7 @@ isolated function wrapWithEntityRepresentation(string typename, map<json>[] fiel
 }
 
 // Prepare query string to resolve by query.
-isolated function wrapwithQuery(string root, string fieldQuery, map<string>? args = ()) returns string {
+public isolated function wrapwithQuery(string root, string fieldQuery, map<string>? args = ()) returns string {
     if args is () {
         return string `query
             {   

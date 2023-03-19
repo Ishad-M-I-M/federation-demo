@@ -1,6 +1,7 @@
 // Need to generate by code modifier plugin
 
 import ballerina/graphql;
+import federation_demo.core;
 
 //Entry point to gateway. Will be generated
 
@@ -26,34 +27,34 @@ service on new graphql:Listener(9000) {
 
     isolated resource function get me(graphql:Field 'field) returns User|error {
         graphql:Client 'client = self.clients.get(ACCOUNTS);
-        QueryFieldClassifier classifier = new ('field, ACCOUNTS);
+        core:QueryFieldClassifier classifier = new ('field, queryPlan, ACCOUNTS);
 
         string fieldString = classifier.getFieldString();
-        unResolvableField[] propertiesNotResolved = classifier.getUnresolvableFields();
+        core:unResolvableField[] propertiesNotResolved = classifier.getUnresolvableFields();
 
-        string queryString = wrapwithQuery("me", fieldString);
+        string queryString = core:wrapwithQuery("me", fieldString);
         MeResponse response = check 'client->execute(queryString);
 
         User result = response.data.me;
 
-        Resolver resolver = new (self.clients, result, "User", propertiesNotResolved, ["me"]);
+        core:Resolver resolver = new (self.clients, queryPlan, result, "User", propertiesNotResolved, ["me"]);
         return resolver.getResult().ensureType();
 
     }
 
     isolated resource function get topProducts(graphql:Field 'field, int first = 5) returns Product[]|error {
         graphql:Client 'client = self.clients.get(PRODUCTS);
-        QueryFieldClassifier classifier = new ('field, PRODUCTS);
+        core:QueryFieldClassifier classifier = new ('field, queryPlan, PRODUCTS);
 
         string fieldString = classifier.getFieldString();
-        unResolvableField[] propertiesNotResolved = classifier.getUnresolvableFields();
+        core:unResolvableField[] propertiesNotResolved = classifier.getUnresolvableFields();
 
-        string queryString = wrapwithQuery("topProducts", fieldString, {"first": first.toString()});
+        string queryString = core:wrapwithQuery("topProducts", fieldString, {"first": first.toString()});
         topProductsResponse response = check 'client->execute(queryString);
 
         Product[] result = response.data.topProducts;
 
-        Resolver resolver = new (self.clients, result, "Product", propertiesNotResolved, ["topProducts"]);
+        core:Resolver resolver = new (self.clients, queryPlan, result, "Product", propertiesNotResolved, ["topProducts"]);
         return resolver.getResult().ensureType();
 
     }
