@@ -18,14 +18,17 @@ public type fieldRecord record {|
 
 public type queryPlanEntry record {|
     readonly string typename;
-    string key;
+    map<string> keys;
     readonly & table<fieldRecord> key(name) fields;
 |};
 
 public final readonly & table<queryPlanEntry> key(typename) queryPlan = table [
     {
         typename: "User",
-        key: "id",
+        keys: {
+            "accounts": "id",
+            "reviews": "id"
+        },
         fields: table [
             {name: "name", 'type: "STRING", 'client: ACCOUNTS},
             {name: "username", 'type: "STRING", 'client: ACCOUNTS},
@@ -34,7 +37,9 @@ public final readonly & table<queryPlanEntry> key(typename) queryPlan = table [
     },
     {
         typename: "Review",
-        key: "id",
+        keys: {
+            "reviews": "id"
+        },
         fields: table [
             {name: "body", 'type: "STRING", 'client: REVIEWS},
             {name: "author", 'type: "User", 'client: REVIEWS},
@@ -43,7 +48,11 @@ public final readonly & table<queryPlanEntry> key(typename) queryPlan = table [
     },
     {
         typename: "Product",
-        key: "upc",
+        keys: {
+            "inventory": "upc",
+            "products": "upc",
+            "reviews": "upc"
+        },
         fields: table [
             {name: "weight", 'type: "INT", 'client: PRODUCTS},
             {name: "price", 'type: "INT", 'client: PRODUCTS},

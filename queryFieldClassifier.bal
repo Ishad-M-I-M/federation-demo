@@ -72,7 +72,7 @@ class QueryFieldClassifier {
         }
 
         // Push the key field even it is not requested.
-        string key = queryPlan.get(self.fieldTypeName).key;
+        string key = queryPlan.get(self.fieldTypeName).keys.get(self.clientName);
         if properties.indexOf(key) is () {
             properties.push(key);
         }
@@ -93,9 +93,9 @@ class QueryFieldClassifier {
     }
 
     private isolated function isResolvable(graphql:Field 'field, string parentType, string clientName) returns boolean {
-        // check wether the field is the key. Because key SHOULD be resolvable from any client.
+        // check wether the field is the key. Because key SHOULD be resolvable from the client.
         // OR the client name for resolving the field is equal to the given clientName.
-        if 'field.getName() == queryPlan.get(parentType).key ||
+        if 'field.getName() == queryPlan.get(parentType).keys[clientName] ||
             queryPlan.get(parentType).fields.get('field.getName()).'client == clientName {
             return true;
         }

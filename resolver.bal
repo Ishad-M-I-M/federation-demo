@@ -53,7 +53,7 @@ public class Resolver {
 
                 string[]? requiredFields = queryPlan.get('record.parent).fields.get('record.'field.getName()).requires;
 
-                map<json>[] requiredFieldWithValues = check self.getRequiredFieldsInPath(self.result, self.resultType, path, requiredFields);
+                map<json>[] requiredFieldWithValues = check self.getRequiredFieldsInPath(self.result, self.resultType, clientName, path, requiredFields);
 
                 if 'record.'field.getUnwrappedType().kind == "SCALAR" {
                     // If the field type is a scalar type, just pass the field name wrapped with entity representation.
@@ -194,9 +194,9 @@ public class Resolver {
 
     // Get the values of required fields from the results.
     // Don't support @ in the path.
-    isolated function getRequiredFieldsInPath(json pointer, string pointerType, string[] path, string[]? requiredFields = ()) returns map<json>[]|error {
+    isolated function getRequiredFieldsInPath(json pointer, string pointerType, string clientName, string[] path, string[]? requiredFields = ()) returns map<json>[]|error {
         if path.length() == 0 {
-            string key = queryPlan.get(pointerType).key;
+            string key = queryPlan.get(pointerType).keys.get(clientName);
             string[] requiredFieldMapKeys = [key];
 
             if requiredFields is string[] {
@@ -231,7 +231,7 @@ public class Resolver {
         json newPointer = (<map<json>>pointer)[element];
         string fieldType = queryPlan.get(pointerType).fields.get(element).'type;
 
-        return self.getRequiredFieldsInPath(newPointer, fieldType, path, requiredFields);
+        return self.getRequiredFieldsInPath(newPointer, fieldType, clientName, path, requiredFields);
     }
 
 }

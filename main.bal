@@ -17,10 +17,10 @@ service on new graphql:Listener(9000) {
 
     function init() returns error? {
         self.clients = {
-            ACCOUNTS: check new graphql:Client("http://localhost:4001"),
-            REVIEWS: check new graphql:Client("http://localhost:4002"),
-            PRODUCTS: check new graphql:Client("http://localhost:4003"),
-            INVENTORY: check new graphql:Client("http://localhost:4004")
+            "accounts": check new graphql:Client("http://localhost:4001"),
+            "reviews": check new graphql:Client("http://localhost:4002"),
+            "products": check new graphql:Client("http://localhost:4003"),
+            "inventory": check new graphql:Client("http://localhost:4004")
         };
     }
 
