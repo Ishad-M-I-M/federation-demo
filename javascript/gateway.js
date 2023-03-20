@@ -1,5 +1,6 @@
 const { ApolloServer } = require("apollo-server");
 const { ApolloGateway, IntrospectAndCompose } = require("@apollo/gateway");
+const {serializeQueryPlan} = require('@apollo/query-planner');
 
 const supergraphSdl = new IntrospectAndCompose({
   // This entire subgraph list is optional when running in managed federation
@@ -18,7 +19,12 @@ const supergraphSdl = new IntrospectAndCompose({
 const gateway = new ApolloGateway({
   supergraphSdl,
   // Experimental: Enabling this enables the query plan view in Playground.
-  __exposeQueryPlanExperimental: false,
+  // __exposeQueryPlanExperimental: false,
+  experimental_didResolveQueryPlan: function(options) {
+    if (options.requestContext.operationName !== 'IntrospectionQuery') {
+      console.log(serializeQueryPlan(options.queryPlan));
+    }
+  }
 });
 
 (async () => {
