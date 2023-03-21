@@ -55,6 +55,7 @@ const products = [
     price: 899,
     weight: 100,
     dimensions: {
+      upc: "1",
       height: 10,
       width: 10,
       length: 20
@@ -66,6 +67,7 @@ const products = [
     price: 1299,
     weight: 1000,
     dimensions: {
+      upc: "2",
       height: 10,
       width: 10,
       length: 10
@@ -77,6 +79,7 @@ const products = [
     price: 54,
     weight: 50,
     dimensions: {
+      upc: "3",
       height: 10,
       width: 5,
       length: 5
