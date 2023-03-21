@@ -45,10 +45,32 @@ public final readonly & table<core:queryPlanEntry> key(typename) queryPlan = tab
         fields: table [
             {name: "weight", 'type: "INT", 'client: PRODUCTS},
             {name: "price", 'type: "INT", 'client: PRODUCTS},
+            {name: "dimensions", 'type: "ProductDimension", 'client: PRODUCTS},
             {name: "inStock", 'type: "BOOLEAN", 'client: INVENTORY},
-            {name: "shippingEstimate", 'type: "INT", 'client: INVENTORY, requires: ["weight", "price"]},
+            {
+                name: "shippingEstimate",
+                'type: "INT",
+                'client: INVENTORY,
+                requires: [
+                    {
+                        clientName: PRODUCTS,
+                        fieldString: "weight price dimensions{length width}"
+                    }
+                ]
+            },
             {name: "name", 'type: "STRING", 'client: PRODUCTS},
             {name: "reviews", 'type: "Review", 'client: REVIEWS}
+        ]
+    },
+    {
+        typename: "ProductDimension",
+        keys: {
+            "products": "upc"
+        },
+        fields: table [
+            {name: "length", 'type: "INT", 'client: PRODUCTS},
+            {name: "width", 'type: "INT", 'client: PRODUCTS},
+            {name: "height", 'type: "INT", 'client: PRODUCTS}
         ]
     }
 ];

@@ -11,6 +11,14 @@ const typeDefs = gql`
     name: String
     price: Int
     weight: Int
+    dimensions: ProductDimension
+  }
+
+  type ProductDimension @key(fields: "upc") {
+    upc: String!
+    height: Int
+    width: Int
+    length: Int
   }
 `;
 
@@ -45,18 +53,36 @@ const products = [
     upc: "1",
     name: "Table",
     price: 899,
-    weight: 100
+    weight: 100,
+    dimensions: {
+      upc: "1",
+      height: 10,
+      width: 10,
+      length: 20
+    }
   },
   {
     upc: "2",
     name: "Couch",
     price: 1299,
-    weight: 1000
+    weight: 1000,
+    dimensions: {
+      upc: "2",
+      height: 10,
+      width: 10,
+      length: 10
+    }
   },
   {
     upc: "3",
     name: "Chair",
     price: 54,
-    weight: 50
+    weight: 50,
+    dimensions: {
+      upc: "3",
+      height: 10,
+      width: 5,
+      length: 5
+    }
   }
 ];
