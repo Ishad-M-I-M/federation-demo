@@ -6,8 +6,15 @@ const typeDefs = gql`
     upc: String! @external
     weight: Int @external
     price: Int @external
+    dimensions: ProductDimension @external
     inStock: Boolean
-    shippingEstimate: Int @requires(fields: "price weight")
+    shippingEstimate: Float @requires(fields: "price weight dimensions{length width}")
+  }
+
+  extend type ProductDimension @key(fields: "upc") {
+    upc: String! @external
+    width: Int @external
+    length: Int @external
   }
 `;
 
@@ -23,7 +30,7 @@ const resolvers = {
       // free for expensive items
       if (object.price > 1000) return 0;
       // estimate is based on weight
-      return object.weight * 0.5;
+      return object.weight * 0.5 + (object.dimensions.length * object.dimensions.width)* 0.25;
     }
   }
 };

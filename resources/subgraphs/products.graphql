@@ -3,6 +3,14 @@ type Product @key(fields: "upc") {
   name: String
   price: Int
   weight: Int
+  dimensions: ProductDimension
+}
+
+type ProductDimension @key(fields: "upc") {
+  upc: String!
+  height: Int
+  width: Int
+  length: Int
 }
 
 extend type Query {

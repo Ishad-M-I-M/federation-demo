@@ -2,6 +2,13 @@ extend type Product @key(fields: "upc") {
   upc: String! @external
   weight: Int @external
   price: Int @external
+  dimensions: ProductDimension @external
   inStock: Boolean
-  shippingEstimate: Int @requires(fields: "price weight")
+  shippingEstimate: Float @requires(fields: "price weight dimensions{length width}")
+}
+
+extend type ProductDimension @key(fields: "upc") {
+  upc: String! @external
+  width: Int @external
+  length: Int @external
 }
