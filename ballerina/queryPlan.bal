@@ -1,4 +1,3 @@
-import federation_demo.core;
 
 // Need to generate by code modifier plugin
 
@@ -11,7 +10,7 @@ public const string PRODUCTS = "products";
 public const string REVIEWS = "reviews";
 public const string INVENTORY = "inventory";
 
-public final readonly & table<core:queryPlanEntry> key(typename) queryPlan = table [
+public final readonly & table<queryPlanEntry> key(typename) queryPlan = table [
     {
         typename: "User",
         keys: {
