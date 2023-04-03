@@ -14,17 +14,17 @@ public class QueryFieldClassifier {
 
     // unresolvable fields are pushed to the map along with the parentType name.
     // parent type name is needed to decide which type the subfield belongs for.
-    private unResolvableField[] unresolvableFields;
+    private UnResolvableField[] UnResolvableFields;
 
     // Query plan used to classify the fields.
-    private final readonly & table<queryPlanEntry> key(typename) queryPlan;
+    private final readonly & table<QueryPlanEntry> key(typename) queryPlan;
 
-    public isolated function init(graphql:Field 'field, readonly & table<queryPlanEntry> key(typename) queryPlan, string clientName) {
+    public isolated function init(graphql:Field 'field, readonly & table<QueryPlanEntry> key(typename) queryPlan, string clientName) {
         // initialize the class properties.
         self.clientName = clientName;
         self.queryPlan = queryPlan;
         self.resolvableFields = [];
-        self.unresolvableFields = [];
+        self.UnResolvableFields = [];
 
         graphql:Field[]? subfields = 'field.getSubfields();
 
@@ -44,7 +44,7 @@ public class QueryFieldClassifier {
                 self.resolvableFields.push(subfield);
             }
             else {
-                self.unresolvableFields.push({
+                self.UnResolvableFields.push({
                     'field: subfield,
                     parent: fieldTypeName
                 });
@@ -65,13 +65,13 @@ public class QueryFieldClassifier {
             }
             else {
                 // Create a new classifier for the field.
-                // classify and expand the unResolvableFields with the inner level.
+                // classify and expand the UnResolvableFields with the inner level.
                 QueryFieldClassifier classifier = new ('field, self.queryPlan, self.clientName);
 
                 // Get the inner field string and push it to the properties array.
                 properties.push(string `${'field.getName()} { ${classifier.getFieldString()} }`);
-                unResolvableField[] fields = classifier.getUnresolvableFields();
-                self.unresolvableFields.push(...fields);
+                UnResolvableField[] fields = classifier.getUnResolvableFields();
+                self.UnResolvableFields.push(...fields);
             }
         }
 
@@ -92,8 +92,8 @@ public class QueryFieldClassifier {
         return self.resolvableFields;
     }
 
-    public isolated function getUnresolvableFields() returns unResolvableField[] {
-        return self.unresolvableFields;
+    public isolated function getUnResolvableFields() returns UnResolvableField[] {
+        return self.UnResolvableFields;
     }
 
     private isolated function isResolvable(graphql:Field 'field, string parentType, string clientName) returns boolean {
