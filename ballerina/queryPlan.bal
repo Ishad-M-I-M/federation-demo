@@ -36,6 +36,7 @@ public final readonly & table<QueryPlanEntry> key(typename) queryPlan = table [
         typename: "Review",
         keys: {"reviews": "id"},
         fields: table [
+            {name: "summary", 'type: "String", 'client: REVIEWS, requires: [{clientName: PRODUCTS, fieldString: "product {price}"}, {clientName: ACCOUNTS, fieldString: "product {owner}"}, {clientName: INVENTORY, fieldString: "product {inStock}"}]},
             {name: "product", 'type: "Product", 'client: REVIEWS},
             {name: "author", 'type: "User", 'client: REVIEWS},
             {name: "body", 'type: "String", 'client: REVIEWS}

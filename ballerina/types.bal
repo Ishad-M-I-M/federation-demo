@@ -12,6 +12,7 @@ type Review record {|
     string? body?;
     User? author?;
     Product? product?;
+    string? summary?;
 |};
 
 type Product record {|

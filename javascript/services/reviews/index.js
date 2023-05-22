@@ -6,7 +6,8 @@ const typeDefs = gql`
     id: ID!
     body: String
     author: User @provides(fields: "username")
-    product: Product
+    product: Product,
+    summary: String @requires(fields: "product{upc price inStock owner}")
   }
 
   extend type User @key(fields: "id") {
@@ -17,6 +18,9 @@ const typeDefs = gql`
 
   extend type Product @key(fields: "upc") {
     upc: String! @external
+    inStock: Boolean @external
+    price: Int @external
+    owner: String @external
     reviews: [Review]
   }
 `;
@@ -25,6 +29,9 @@ const resolvers = {
   Review: {
     author(review) {
       return { __typename: "User", id: review.authorID };
+    },
+    summary(object){
+      return `Currently available: ${object.product.inStock} at Price: ${object.product.price} and Owner: ${object.product.owner}`;
     }
   },
   User: {

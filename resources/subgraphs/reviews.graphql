@@ -1,5 +1,7 @@
 extend type Product @key(fields: "upc") {
   upc: String! @external
+  inStock: Boolean @external
+  price: Int @external
   reviews: [Review]
 }
 
@@ -8,6 +10,7 @@ type Review @key(fields: "id") {
   body: String
   author: User @provides(fields: "username")
   product: Product
+  summary: String @requires(fields: "product{upc price inStock}")
 }
 
 extend type User @key(fields: "id") {

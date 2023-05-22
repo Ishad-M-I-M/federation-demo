@@ -6,6 +6,11 @@ const typeDefs = gql`
     me: User
   }
 
+  extend type Product @key(fields: "upc") {
+    upc: String! @external
+    owner: String
+  }
+
   type User @key(fields: "id") {
     id: ID!
     name: String
@@ -22,6 +27,11 @@ const resolvers = {
   User: {
     __resolveReference(object) {
       return users.find(user => user.id === object.id);
+    }
+  },
+  Product: {
+    __resolveReference(object) {
+      return products.find(product => product.upc === object.upc);
     }
   }
 };
@@ -51,5 +61,20 @@ const users = [
     name: "Alan Turing",
     birthDate: "1912-06-23",
     username: "@complete"
+  }
+];
+
+const products = [
+  {
+    upc: "1",
+    owner: "Owner 1"
+  },
+  {
+    upc: "2",
+    owner: "Owner 2"
+  },
+  {
+    upc: "3",
+    owner: "Owner 3"
   }
 ];
